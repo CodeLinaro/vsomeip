@@ -80,6 +80,7 @@ configuration_impl::configuration_impl(const std::string &_path)
       permissions_uds_(VSOMEIP_DEFAULT_UDS_PERMISSIONS),
       network_("vsomeip"),
       e2e_enabled_(false),
+      e2e_strip_header_(false),
       log_memory_(false),
       log_memory_interval_(0),
       log_status_(false),
@@ -199,6 +200,7 @@ configuration_impl::configuration_impl(const configuration_impl &_other)
     configuration_path_ = _other.configuration_path_;
 
     e2e_enabled_ = _other.e2e_enabled_;
+    e2e_strip_header_ = _other.e2e_strip_header_;
     e2e_configuration_ = _other.e2e_configuration_;
 
     log_memory_ = _other.log_memory_;
@@ -3728,6 +3730,10 @@ bool configuration_impl::is_e2e_enabled() const {
     return e2e_enabled_;
 }
 
+bool configuration_impl::is_e2e_strip_header_enabled() const {
+    return e2e_strip_header_;
+}
+
 void configuration_impl::load_e2e(const configuration_element &_element) {
 #ifdef _WIN32
         return;
@@ -3743,6 +3749,11 @@ void configuration_impl::load_e2e(const configuration_element &_element) {
             if (its_e2e->first == "e2e_enabled") {
                 if (its_e2e->second.data() == "true") {
                     e2e_enabled_ = true;
+                }
+            }
+            if (its_e2e->first == "e2e_strip_header") {
+                if (its_e2e->second.data() == "true") {
+                    e2e_strip_header_ = true;
                 }
             }
             if (its_e2e->first == "protected") {

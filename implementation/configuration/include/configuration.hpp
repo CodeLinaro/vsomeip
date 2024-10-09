@@ -204,6 +204,7 @@ public:
     //E2E
     virtual std::map<e2exf::data_identifier_t, std::shared_ptr<cfg::e2e>> get_e2e_configuration() const = 0;
     virtual bool is_e2e_enabled() const = 0;
+    virtual bool is_e2e_strip_header_enabled() const = 0;
 
     virtual bool log_memory() const = 0;
     virtual uint32_t get_log_memory_interval() const = 0;

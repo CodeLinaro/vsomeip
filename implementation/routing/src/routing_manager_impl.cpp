@@ -1657,6 +1657,28 @@ void routing_manager_impl::on_message(const byte_t *_data, length_t _size,
                         VSOMEIP_INFO << "E2E protection: CRC check failed for service: "
                                 << std::hex << its_service << " method: " << its_method;
                     }
+
+                    if (configuration_->is_e2e_strip_header_enabled()) {
+                        std::pair<std::string, size_t> e2econf = get_e2econf({ its_service, its_method });
+                        VSOMEIP_INFO << "e2e(C)[" << std::hex << its_service << "." << std::hex << its_method
+                            << "]:(" << e2econf.first << "," << std::dec << e2econf.second << ")";
+                        if (e2econf.first == "P04") {
+                            size_t e2e_offset = e2econf.second / 8;
+                            size_t size_with_e2eheader = its_buffer.size();
+                            size_t size_without_e2eheader = size_with_e2eheader - VSOMEIP_E2E_PROFILE04_HEADER_SIZE;
+                            size_t payload_offset = e2e_offset + VSOMEIP_E2E_PROFILE04_HEADER_SIZE;
+                            edata_.clear();
+                            edata_.insert(edata_.begin(), _data, _data + its_base);
+                            edata_.insert(edata_.end(), its_buffer.begin(), its_buffer.begin() + e2e_offset);
+                            edata_.insert(edata_.end(), its_buffer.begin() + payload_offset, its_buffer.end());
+                            edata_[VSOMEIP_LENGTH_POS_MIN] = VSOMEIP_LONG_BYTE3(size_without_e2eheader);
+                            edata_[VSOMEIP_LENGTH_POS_MIN + 1] = VSOMEIP_LONG_BYTE2(size_without_e2eheader);
+                            edata_[VSOMEIP_LENGTH_POS_MIN + 2] = VSOMEIP_LONG_BYTE1(size_without_e2eheader);
+                            edata_[VSOMEIP_LENGTH_POS_MIN + 3] = VSOMEIP_LONG_BYTE0(size_without_e2eheader);
+                            _data = edata_.data();
+                            _size = size_without_e2eheader + its_base;
+                        }
+                    }
                 }
             }
 

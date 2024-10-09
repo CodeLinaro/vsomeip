@@ -215,6 +215,7 @@ public:
     // E2E
     VSOMEIP_EXPORT std::map<e2exf::data_identifier_t, std::shared_ptr<cfg::e2e>> get_e2e_configuration() const;
     VSOMEIP_EXPORT bool is_e2e_enabled() const;
+    VSOMEIP_EXPORT bool is_e2e_strip_header_enabled() const;
 
     VSOMEIP_EXPORT bool log_memory() const;
     VSOMEIP_EXPORT uint32_t get_log_memory_interval() const;
@@ -608,6 +609,7 @@ protected:
     std::string configuration_path_;
 
     bool e2e_enabled_;
+    bool e2e_strip_header_;
     std::map<e2exf::data_identifier_t, std::shared_ptr<cfg::e2e>> e2e_configuration_;
 
     bool log_memory_;
