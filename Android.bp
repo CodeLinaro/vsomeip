@@ -82,7 +82,7 @@ cc_library_shared {
         "-DWITHOUT_SYSTEMD",
         "-DVSOMEIP_VERSION=\"3.4.10\"",
         "-DVSOMEIP_COMPAT_VERSION=\"3.4.10\"",
-        "-DVSOMEIP_BASE_PATH=\"/vendor/run/someip/\"",
+        "-DVSOMEIP_BASE_PATH=\"/data/vendor/someip/\"",
         "-DUSE_DLT",
     ],
 

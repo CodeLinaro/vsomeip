@@ -1,3 +1,13 @@
+#
+#  vsomeip_dlt libraries build not enabled. 
+#  vsomeip_dlt build file(Android.mk) is newly introduced in latest version
+#  vsomeip_dlt build file(Android.mk) is incomplete & giving build error in Android build env 
+#  Android.bp covers the required stack/core library build.
+#  vsomeip stack/core libraries has no dependency on vsomeip_dlt libraries
+#  So ENABLE_VSOMEIP_DLT_BUILD flag is not enabled
+#
+
+ifeq ($(ENABLE_VSOMEIP_DLT_BUILD),1)
 # Cannot convert to Android.bp as resource copying has not
 # yet implemented for soong as of 12/16/2016
 
@@ -214,3 +224,12 @@ LOCAL_CFLAGS :=  \
     -Wl,-wrap,open \
 
 include $(BUILD_SHARED_LIBRARY)
+
+
+else
+
+#
+#  ENABLE_VSOMEIP_DLT_BUILD flag is not enabled
+#
+
+endif
