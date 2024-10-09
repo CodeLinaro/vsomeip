@@ -54,12 +54,10 @@
 #include "../../tracing/include/connector_impl.hpp"
 #endif
 
-#ifndef ANDROID
 #include "../../e2e_protection/include/buffer/buffer.hpp"
 #include "../../e2e_protection/include/e2exf/config.hpp"
 
 #include "../../e2e_protection/include/e2e/profile/e2e_provider.hpp"
-#endif
 
 #ifdef USE_DLT
 #include "../../tracing/include/connector_impl.hpp"
@@ -178,7 +176,6 @@ void routing_manager_impl::init() {
         }
     }
 
-#ifndef ANDROID
     if( configuration_->is_e2e_enabled()) {
         VSOMEIP_INFO << "E2E protection enabled.";
 
@@ -200,7 +197,6 @@ void routing_manager_impl::init() {
             }
         }
     }
-#endif
 }
 
 void routing_manager_impl::start() {
@@ -940,7 +936,6 @@ bool routing_manager_impl::send(client_t _client, const byte_t *_data,
                                 _data[VSOMEIP_SERVICE_POS_MIN], _data[VSOMEIP_SERVICE_POS_MAX]);
                         method_t its_method = VSOMEIP_BYTES_TO_WORD(
                                 _data[VSOMEIP_METHOD_POS_MIN], _data[VSOMEIP_METHOD_POS_MAX]);
-#ifndef ANDROID
                         if (e2e_provider_->is_protected({its_service, its_method})) {
                             // Find out where the protected area starts
                             size_t its_base = e2e_provider_->get_protection_base({its_service, its_method});
@@ -955,7 +950,6 @@ bool routing_manager_impl::send(client_t _client, const byte_t *_data,
 
                             _data = its_buffer.data();
                        }
-#endif
                     }
                 }
                 if (is_request) {
@@ -1139,7 +1133,6 @@ bool routing_manager_impl::send_to(
             method_t its_method = VSOMEIP_BYTES_TO_WORD(
                     its_data[VSOMEIP_METHOD_POS_MIN],
                     its_data[VSOMEIP_METHOD_POS_MAX]);
-#ifndef ANDROID
             if (e2e_provider_->is_protected({its_service, its_method})) {
                 auto its_base = e2e_provider_->get_protection_base({its_service, its_method});
                 its_buffer.assign(its_data + its_base, its_data + its_size);
@@ -1147,7 +1140,6 @@ bool routing_manager_impl::send_to(
                 its_buffer.insert(its_buffer.begin(), its_data, its_data + its_base);
                 its_data = its_buffer.data();
            }
-#endif
         }
 
         const_cast<byte_t*>(its_data)[VSOMEIP_CLIENT_POS_MIN] = VSOMEIP_WORD_BYTE1(_client);
@@ -1599,7 +1591,6 @@ void routing_manager_impl::on_message(const byte_t *_data, length_t _size,
                 its_method = VSOMEIP_BYTES_TO_WORD(
                            _data[VSOMEIP_METHOD_POS_MIN],
                            _data[VSOMEIP_METHOD_POS_MAX]);
-#ifndef ANDROID
                 if (e2e_provider_->is_checked({its_service, its_method})) {
                     auto its_base = e2e_provider_->get_protection_base({its_service, its_method});
                     e2e_buffer its_buffer(_data + its_base, _data + _size);
@@ -1611,7 +1602,6 @@ void routing_manager_impl::on_message(const byte_t *_data, length_t _size,
                                 << std::hex << its_service << " method: " << its_method;
                     }
                 }
-#endif
             }
 
             // ACL check message
