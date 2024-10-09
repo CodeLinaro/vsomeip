@@ -465,6 +465,8 @@ private:
             service_t _service, instance_t _instance,
             const boost::asio::ip::address &_remote_address) const;
 
+    std::pair<std::string, size_t> get_e2econf(e2exf::data_identifier_t id);
+
 private:
     std::shared_ptr<routing_manager_stub> stub_;
     std::shared_ptr<sd::service_discovery> discovery_;

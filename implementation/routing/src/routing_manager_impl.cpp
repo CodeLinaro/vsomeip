@@ -63,6 +63,8 @@
 #include "../../tracing/include/connector_impl.hpp"
 #endif
 
+#define VSOMEIP_E2E_PROFILE04_HEADER_SIZE    12U
+
 namespace vsomeip_v3 {
 
 #ifdef ANDROID
@@ -197,6 +199,29 @@ void routing_manager_impl::init() {
             }
         }
     }
+}
+
+std::pair<std::string, size_t> routing_manager_impl::get_e2econf(e2exf::data_identifier_t id) {
+    std::string profile;
+    std::string offsetstr;
+    size_t offset;
+    char* end = NULL;
+    cfg::e2e::custom_parameters_t custom_param;
+    if(e2e_provider_) {
+        std::map<e2exf::data_identifier_t, std::shared_ptr<cfg::e2e>> e2e_configuration = configuration_->get_e2e_configuration();
+        auto found_id = e2e_configuration.find(id);
+        if (found_id != e2e_configuration.end()) {
+            profile = found_id->second->profile;
+            custom_param = found_id->second->custom_parameters;
+            offsetstr = custom_param["crc_offset"];
+            offset = (size_t)strtol(offsetstr.c_str(), &end, 10);
+            if (!end) {
+                VSOMEIP_ERROR << "rmi::" << __func__ << " strtol failed";
+            }
+        }
+    }
+
+    return std::make_pair(profile, offset);
 }
 
 void routing_manager_impl::start() {
@@ -942,11 +967,25 @@ bool routing_manager_impl::send(client_t _client, const byte_t *_data,
 
                             // Build a corresponding buffer
                             its_buffer.assign(_data + its_base, _data + _size);
-
+                            std::pair<std::string, size_t> e2econf = get_e2econf({ its_service, its_method });
+                            VSOMEIP_INFO << "e2e(P)[" << std::hex << its_service << "." << std::hex << its_method
+                                << "]:(" << e2econf.first << "," << std::dec << e2econf.second << ")";
+                            if (e2econf.first == "P04") {
+                                size_t e2e_offset = e2econf.second / 8;
+                                its_buffer.insert(its_buffer.begin() + e2e_offset, VSOMEIP_E2E_PROFILE04_HEADER_SIZE, 0);
+                            }
                             e2e_provider_->protect({ its_service, its_method }, its_buffer, _instance);
-
+                            uint32_t size_with_e2eheader = its_buffer.size();
                             // Prepend header
                             its_buffer.insert(its_buffer.begin(), _data, _data + its_base);
+
+                            if (e2econf.first == "P04") {
+                                its_buffer[VSOMEIP_LENGTH_POS_MIN] = VSOMEIP_LONG_BYTE3(size_with_e2eheader);
+                                its_buffer[VSOMEIP_LENGTH_POS_MIN + 1] = VSOMEIP_LONG_BYTE2(size_with_e2eheader);
+                                its_buffer[VSOMEIP_LENGTH_POS_MIN + 2] = VSOMEIP_LONG_BYTE1(size_with_e2eheader);
+                                its_buffer[VSOMEIP_LENGTH_POS_MIN + 3] = VSOMEIP_LONG_BYTE0(size_with_e2eheader);
+                                _size = its_buffer.size();
+                            }
 
                             _data = its_buffer.data();
                        }
@@ -1136,8 +1175,25 @@ bool routing_manager_impl::send_to(
             if (e2e_provider_->is_protected({its_service, its_method})) {
                 auto its_base = e2e_provider_->get_protection_base({its_service, its_method});
                 its_buffer.assign(its_data + its_base, its_data + its_size);
+                std::pair<std::string, size_t> e2econf = get_e2econf({ its_service, its_method });
+                VSOMEIP_INFO << "e2e(P)[" << std::hex << its_service << "." << std::hex << its_method
+                    << "]:(" << e2econf.first << "," << std::dec << e2econf.second << ")";
+                if (e2econf.first == "P04") {
+                    size_t e2e_offset = e2econf.second / 8;
+                    its_buffer.insert(its_buffer.begin() + e2e_offset, VSOMEIP_E2E_PROFILE04_HEADER_SIZE, 0);
+                }
                 e2e_provider_->protect({its_service, its_method}, its_buffer, _message->get_instance());
+                uint32_t size_with_e2eheader = its_buffer.size();
                 its_buffer.insert(its_buffer.begin(), its_data, its_data + its_base);
+
+                if (e2econf.first == "P04") {
+                    its_buffer[VSOMEIP_LENGTH_POS_MIN] = VSOMEIP_LONG_BYTE3(size_with_e2eheader);
+                    its_buffer[VSOMEIP_LENGTH_POS_MIN + 1] = VSOMEIP_LONG_BYTE2(size_with_e2eheader);
+                    its_buffer[VSOMEIP_LENGTH_POS_MIN + 2] = VSOMEIP_LONG_BYTE1(size_with_e2eheader);
+                    its_buffer[VSOMEIP_LENGTH_POS_MIN + 3] = VSOMEIP_LONG_BYTE0(size_with_e2eheader);
+                    its_size = its_buffer.size();
+                }
+
                 its_data = its_buffer.data();
            }
         }
