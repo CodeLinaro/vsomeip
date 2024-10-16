@@ -116,10 +116,14 @@ void udp_client_endpoint_impl::connect() {
         // If specified, bind to device
         std::string its_device(configuration_->get_device());
         if (its_device != "") {
+            #ifdef _QNX_IOSOCK
+                VSOMEIP_WARNING << "SO_BINDTODEVICE is not supported with QNX io-sock. wrt vsomeip functionality, its an optional feature and not used.";
+            #else
             if (setsockopt(socket_->native_handle(),
                     SOL_SOCKET, SO_BINDTODEVICE, its_device.c_str(), socklen_t(its_device.size())) == -1) {
                 VSOMEIP_WARNING << "UDP Client: Could not bind to device \"" << its_device << "\"";
             }
+            #endif //#ifdef _QNX_IOSOCK
         }
 #endif
 

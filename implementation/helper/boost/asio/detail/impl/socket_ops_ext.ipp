@@ -96,14 +96,23 @@ signed_size_type recvfrom(socket_type s, buf* bufs, size_t count,
 		 cmsg != NULL;
 	  	 cmsg = CMSG_NXTHDR(&msg, cmsg))
 	{
+    #ifndef _QNX_IOSOCK
 	  if (cmsg->cmsg_level != IPPROTO_IP || cmsg->cmsg_type != IP_PKTINFO)
+    #else
+	  if (cmsg->cmsg_level != IPPROTO_IP || cmsg->cmsg_type != IP_RECVDSTADDR)
+    #endif //#ifndef _QNX_IOSOCK
 	  	continue;
-
+    #ifndef _QNX_IOSOCK
       struct in_pktinfo *pi = (struct in_pktinfo *) CMSG_DATA(cmsg);
 	  if (pi)
 	  {
 	    da = boost::asio::ip::address_v4(ntohl(pi->ipi_addr.s_addr));
 	  } 
+    #else 
+    struct in_addr sin_addr;
+    memcpy(&sin_addr,CMSG_DATA(cmsg),sizeof(struct in_addr));
+	  da = boost::asio::ip::address_v4(ntohl(sin_addr.s_addr));
+    #endif//#ifndef _QNX_IOSOCK
 	}      
   }
   return result;

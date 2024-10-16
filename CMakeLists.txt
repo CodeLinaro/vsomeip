@@ -221,6 +221,26 @@ if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 1)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS")
 endif ()
 
+# QNX SOCKET library
+if(${CMAKE_SYSTEM_NAME} MATCHES "QNX")
+    if (${EXTRA_CMAKE_CXX_FLAGS} MATCHES "_QNX_IOSOCK")
+        SET(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
+        include_directories("${QNX_TARGET}/usr/include/io-sock")
+        SET(CMAKE_INCLUDE_DIRECTORIES_BEFORE OFF)
+        message( STATUS "QNX SOCKET_INCLUDE: ${QNX_TARGET}/usr/include/io-sock")
+
+        find_library(SOCKET_LIB socket PATHS ${CMAKE_SYSROOT}/aarch64le/io-sock/lib NO_DEFAULT_PATH)
+        message( STATUS "QNX SOCKET_LIB: ${SOCKET_LIB}" )
+    else ()
+        SET(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
+        include_directories("${QNX_TARGET}/usr/include")
+        SET(CMAKE_INCLUDE_DIRECTORIES_BEFORE OFF)
+        message( STATUS "QNX SOCKET_INCLUDE:${QNX_TARGET}/usr/include")
+
+        find_library(SOCKET_LIB socket PATHS ${CMAKE_SYSROOT}/aarch64le/lib NO_DEFAULT_PATH)
+        message( STATUS "QNX SOCKET_LIB: ${SOCKET_LIB}" )
+    endif()
+endif()
 ################################################################################
 # Directories
 ################################################################################
@@ -316,7 +336,11 @@ target_include_directories(${VSOMEIP_NAME} INTERFACE
 # them (which shouldn't be required). ${Boost_LIBRARIES} includes absolute
 # build host paths as of writing, which also makes this important as it breaks
 # the build.
+if(${CMAKE_SYSTEM_NAME} MATCHES "QNX")
+target_link_libraries(${VSOMEIP_NAME} ${SOCKET_LIB} ${Boost_LIBRARIES} ${USE_RT} ${DL_LIBRARY} ${DLT_LIBRARIES} ${SystemD_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+else()
 target_link_libraries(${VSOMEIP_NAME} PRIVATE ${Boost_LIBRARIES} ${USE_RT} ${DL_LIBRARY} ${DLT_LIBRARIES} ${SystemD_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 if(NOT WIN32)
     target_link_options(${VSOMEIP_NAME} PRIVATE "LINKER:-as-needed")
@@ -356,7 +380,7 @@ endif ()
 target_link_libraries(${VSOMEIP_NAME}-e2e ${VSOMEIP_NAME} ${Boost_LIBRARIES} ${USE_RT} ${DL_LIBRARY} ${SystemD_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "QNX")
-    target_link_libraries(${VSOMEIP_NAME}-e2e socket)
+    target_link_libraries(${VSOMEIP_NAME}-e2e ${SOCKET_LIB})
 endif()
 ################################################################################
 # Compatibility library
@@ -644,6 +668,7 @@ endif()
 # build routing manager daemon (Non-Windows only)
 if (NOT MSVC)
 add_subdirectory( examples/routingmanagerd )
+add_subdirectory( examples/hello_world )
 endif()
 
 # build tools
@@ -670,4 +695,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "QNX")
 
     install(FILES ${PROJECT_BINARY_DIR}/examples/routingmanagerd/routingmanagerd
         DESTINATION bin/vsomeip_tests/examples/routingmanagerd)
+    install(FILES ${PROJECT_BINARY_DIR}/examples/hello_world/hello_world_client
+        DESTINATION bin/vsomeip_tests/examples/hello_world)
+    install(FILES ${PROJECT_BINARY_DIR}/examples/hello_world/hello_world_service
+        DESTINATION bin/vsomeip_tests/examples/hello_world)
 endif()

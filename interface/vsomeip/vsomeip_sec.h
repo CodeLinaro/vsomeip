@@ -24,8 +24,10 @@ typedef uint32_t vsomeip_sec_ip_addr_t;      // ip address in network byte order
 typedef uint16_t vsomeip_sec_network_port_t; // network port in network byte order
 
 #ifndef __unix__
+#ifndef __QNX__
 typedef uint32_t uid_t;
 typedef uint32_t gid_t;
+#endif
 #endif
 
 typedef struct {

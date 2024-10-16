@@ -71,10 +71,14 @@ udp_server_endpoint_impl::udp_server_endpoint_impl(
     // If specified, bind to device
     std::string its_device(configuration_->get_device());
     if (its_device != "") {
+        #ifdef _QNX_IOSOCK
+            VSOMEIP_WARNING << "SO_BINDTODEVICE is not supported with QNX io-sock. wrt vsomeip functionality, its an optional feature and not used.";
+        #else
         if (setsockopt(unicast_socket_.native_handle(),
                 SOL_SOCKET, SO_BINDTODEVICE, its_device.c_str(), (socklen_t)its_device.size()) == -1) {
             VSOMEIP_WARNING << "UDP Server: Could not bind to device \"" << its_device << "\"";
         }
+        #endif //#ifdef _QNX_IOSOCK
     }
 #endif
 
@@ -862,7 +866,11 @@ udp_server_endpoint_impl::set_multicast_option(
             int its_pktinfo_option(1);
             ::setsockopt(multicast_socket_->native_handle(),
                     (is_v4_ ? IPPROTO_IP : IPPROTO_IPV6),
+                #ifdef _QNX_IOSOCK
+                    (is_v4_ ? IP_RECVDSTADDR : IPV6_RECVPKTINFO),
+                #else
                     (is_v4_ ? IP_PKTINFO : IPV6_RECVPKTINFO),
+                #endif //#ifdef _QNX_IOSOCK
                     &its_pktinfo_option, sizeof(its_pktinfo_option));
 #endif
 

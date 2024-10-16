@@ -34,8 +34,8 @@ GENERATE_PINFO_FILES ?= TRUE
 ALL_DEPENDENCIES = vsomeip_all
 .PHONY: vsomeip_all
 
-FLAGS   += -g -D_QNX_SOURCE
-LDFLAGS += -Wl,--build-id=md5 -lang-c++ -lsocket
+FLAGS   += -g -D_QNX_SOURCE -D_QNX_IOSOCK
+LDFLAGS += -Wl,--build-id=md5 -lang-c++
 
 CMAKE_ARGS = -DCMAKE_TOOLCHAIN_FILE=$(PROJECT_ROOT)/qnx.nto.toolchain.cmake \
              -DCMAKE_INSTALL_PREFIX=$(VSOMEIP_INSTALL_ROOT)/$(CPUVARDIR)/usr \
