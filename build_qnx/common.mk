@@ -3,6 +3,14 @@ QCONFIG=qconfig.mk
 endif
 include $(QCONFIG)
 
+
+#set the following to TRUE if you want vsomeip to find the boost package under INSTALL_ROOT_nto.
+#If you do, make sure to your boost package avaialble in INSTALL_ROOT_nto
+BOOST_INSTALL_ROOT ?= TRUE
+
+#set the following to TRUE if you want use io-sock variant.
+QNX_IO_SOCK_ENABLE ?= TRUE
+
 #where to install vsomeip:
 #$(INSTALL_ROOT_$(OS)) is pointing to $QNX_TARGET
 #by default, unless it was manually re-routed to
@@ -11,7 +19,12 @@ include $(QCONFIG)
 VSOMEIP_INSTALL_ROOT ?= $(INSTALL_ROOT_$(OS))
 
 #where to find the vsomeip external dependencies, such as Boost
+ifeq ($(BOOST_INSTALL_ROOT), TRUE)
+VSOMEIP_EXTERNAL_DEPS_INSTALL ?= $(INSTALL_ROOT_$(OS))
+else
 VSOMEIP_EXTERNAL_DEPS_INSTALL ?= $(USE_ROOT_$(OS))
+endif
+
 
 # Get version information from CMakeLists.txt
 VSOMEIP_MAJOR_VERSION = $(word 3, $(shell bash -c "grep VSOMEIP_MAJOR_VERSION $(PROJECT_ROOT)/../CMakeLists.txt | head -1 | head -c-2"))
@@ -34,8 +47,14 @@ GENERATE_PINFO_FILES ?= TRUE
 ALL_DEPENDENCIES = vsomeip_all
 .PHONY: vsomeip_all
 
-FLAGS   += -g -D_QNX_SOURCE -D_QNX_IOSOCK
+FLAGS   += -g -D_QNX_SOURCE
 LDFLAGS += -Wl,--build-id=md5 -lang-c++
+
+ifeq ($(QNX_IO_SOCK_ENABLE), TRUE)
+FLAGS   += -D_QNX_IOSOCK
+else
+LDFLAGS += -lsocket
+endif
 
 CMAKE_ARGS = -DCMAKE_TOOLCHAIN_FILE=$(PROJECT_ROOT)/qnx.nto.toolchain.cmake \
              -DCMAKE_INSTALL_PREFIX=$(VSOMEIP_INSTALL_ROOT)/$(CPUVARDIR)/usr \

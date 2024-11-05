@@ -425,6 +425,7 @@ set(EXAMPLE_CONFIG_FILES
     "config/vsomeip-tcp-service.json"
     "config/vsomeip-udp-client.json"
     "config/vsomeip-udp-service.json"
+    "examples/hello_world/helloworld-local.json"
 )
 
 ################################################################################
