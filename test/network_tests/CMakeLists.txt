@@ -77,6 +77,7 @@ if(NOT ${TESTS_BAT})
         configuration_tests/configuration-test.cpp
         ${PROJECT_SOURCE_DIR}/implementation/plugin/src/plugin_manager_impl.cpp
     )
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)              
     target_link_libraries(${TEST_CONFIGURATION}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -86,6 +87,16 @@ if(NOT ${TESTS_BAT})
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_CONFIGURATION}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif()
 
     # The following will make sure that ${TEST_CONFIGURATION_CONFIG_FILE} is copied
     # from the config folder into the test folder in the builddirectory
@@ -1362,6 +1373,7 @@ if(NOT ${TESTS_BAT})
     add_executable(${TEST_CLIENT_ID_UTILITY}
         client_id_tests/${TEST_CLIENT_ID_UTILITY}.cpp)
         #${PROJECT_SOURCE_DIR}/implementation/utility/src/utility.cpp)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)          
     target_link_libraries(${TEST_CLIENT_ID_UTILITY}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -1371,6 +1383,16 @@ if(NOT ${TESTS_BAT})
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_CLIENT_ID_UTILITY}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif()
 
     # Copy config files for test into $BUILDDIR/test
     set(TEST_CLIENT_ID_DIFF_IDS_DIFF_PORTS_MASTER_CONFIG_FILE
@@ -3693,6 +3715,7 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
     set(TEST_NPDU_SERVICE_ONE npdu_test_service_1)
     add_executable(${TEST_NPDU_SERVICE_ONE} npdu_tests/${TEST_NPDU_SERVICE}.cpp)
     set_target_properties(${TEST_NPDU_SERVICE_ONE} PROPERTIES COMPILE_FLAGS -DSERVICE_NUMBER=0)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)    
     target_link_libraries(${TEST_NPDU_SERVICE_ONE}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3702,10 +3725,21 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_SERVICE_ONE}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     set(TEST_NPDU_SERVICE_TWO npdu_test_service_2)
     add_executable(${TEST_NPDU_SERVICE_TWO} npdu_tests/${TEST_NPDU_SERVICE}.cpp)
     set_target_properties(${TEST_NPDU_SERVICE_TWO} PROPERTIES COMPILE_FLAGS -DSERVICE_NUMBER=1)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)    
     target_link_libraries(${TEST_NPDU_SERVICE_TWO}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3715,10 +3749,21 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_SERVICE_TWO}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     set(TEST_NPDU_SERVICE_THREE npdu_test_service_3)
     add_executable(${TEST_NPDU_SERVICE_THREE} npdu_tests/${TEST_NPDU_SERVICE}.cpp)
     set_target_properties(${TEST_NPDU_SERVICE_THREE} PROPERTIES COMPILE_FLAGS -DSERVICE_NUMBER=2)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_SERVICE_THREE}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3728,10 +3773,20 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
-
+else()
+    target_link_libraries(${TEST_NPDU_SERVICE_THREE}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
     set(TEST_NPDU_SERVICE_FOUR npdu_test_service_4)
     add_executable(${TEST_NPDU_SERVICE_FOUR} npdu_tests/${TEST_NPDU_SERVICE}.cpp)
     set_target_properties(${TEST_NPDU_SERVICE_FOUR} PROPERTIES COMPILE_FLAGS -DSERVICE_NUMBER=3)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_SERVICE_FOUR}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3741,6 +3796,16 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+       target_link_libraries(${TEST_NPDU_SERVICE_FOUR}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    ) 
+endif ()
 
     # Copy config file for service w/o npdu into $BUILDDIR/test
     set(TEST_NPDU_SERVICE_CONFIG_FILE ${TEST_NPDU_SERVICE}_no_npdu.json)
@@ -3786,6 +3851,7 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
 
     set(TEST_NPDU_CLIENT_ONE npdu_test_client_1)
     add_executable(${TEST_NPDU_CLIENT_ONE} npdu_tests/${TEST_NPDU_CLIENT}.cpp)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_CLIENT_ONE}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3795,9 +3861,20 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_CLIENT_ONE}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     set(TEST_NPDU_CLIENT_TWO npdu_test_client_2)
     add_executable(${TEST_NPDU_CLIENT_TWO} npdu_tests/${TEST_NPDU_CLIENT}.cpp)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_CLIENT_TWO}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3807,9 +3884,20 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_CLIENT_TWO}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     set(TEST_NPDU_CLIENT_THREE npdu_test_client_3)
     add_executable(${TEST_NPDU_CLIENT_THREE} npdu_tests/${TEST_NPDU_CLIENT}.cpp)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_CLIENT_THREE}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3819,9 +3907,20 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_CLIENT_THREE}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     set(TEST_NPDU_CLIENT_FOUR npdu_test_client_4)
     add_executable(${TEST_NPDU_CLIENT_FOUR} npdu_tests/${TEST_NPDU_CLIENT}.cpp)
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
     target_link_libraries(${TEST_NPDU_CLIENT_FOUR}
         ${VSOMEIP_NAME}
         ${VSOMEIP_NAME}-cfg
@@ -3831,6 +3930,16 @@ if(NOT ${TESTS_BAT} AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         ${DLT_LIBRARIES}
         vsomeip_utilities
     )
+else()
+    target_link_libraries(${TEST_NPDU_CLIENT_FOUR}
+        ${VSOMEIP_NAME}
+        ${Boost_LIBRARIES}
+        ${DL_LIBRARY}
+        ${TEST_LINK_LIBRARIES}
+        ${DLT_LIBRARIES}
+        vsomeip_utilities
+    )
+endif ()
 
     # Copy config files for client w/o npdu into $BUILDDIR/test
     set(TEST_NPDU_CLIENT_CONFIG_FILE ${TEST_NPDU_CLIENT}_no_npdu.json)

@@ -16,6 +16,7 @@ find_package(Boost 1.55 COMPONENTS filesystem system REQUIRED)
 # Executable and libraries to link
 # ----------------------------------------------------------------------------
 add_executable (${PROJECT_NAME} ${SRCS} )
+if (VSOMEIP_ENABLE_MULTIPLE_ROUTING_MANAGERS EQUAL 0)
 target_link_libraries (
     ${PROJECT_NAME}
     vsomeip3
@@ -26,5 +27,15 @@ target_link_libraries (
     gtest
     vsomeip_utilities
 )
-
+else()
+target_link_libraries (
+    ${PROJECT_NAME}
+    vsomeip3
+    Threads::Threads
+    ${Boost_LIBRARIES}
+    ${DL_LIBRARY}
+    gtest
+    vsomeip_utilities
+)
+endif ()
 add_dependencies(build_unit_tests ${PROJECT_NAME})
