@@ -872,6 +872,12 @@ udp_server_endpoint_impl::set_multicast_option(
                     (is_v4_ ? IP_PKTINFO : IPV6_RECVPKTINFO),
                 #endif //#ifdef _QNX_IOSOCK
                     &its_pktinfo_option, sizeof(its_pktinfo_option));
+
+#ifdef _ENABLE_SO_REUSEPORT                    
+            ::setsockopt(multicast_socket_->native_handle(),SOL_SOCKET,SO_REUSEPORT,
+                    &its_pktinfo_option, sizeof(its_pktinfo_option));
+#endif
+
 #endif
 
             if (multicast_recv_buffer_.empty())

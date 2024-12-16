@@ -11,6 +11,9 @@ BOOST_INSTALL_ROOT ?= TRUE
 #set the following to TRUE if you want use io-sock variant.
 QNX_IO_SOCK_ENABLE ?= TRUE
 
+#set the following to TRUE if you want reuse same SD-port for Multiple Routing Manager.
+ENABLE_SO_REUSEPORT?= TRUE
+
 #where to install vsomeip:
 #$(INSTALL_ROOT_$(OS)) is pointing to $QNX_TARGET
 #by default, unless it was manually re-routed to
@@ -54,6 +57,10 @@ ifeq ($(QNX_IO_SOCK_ENABLE), TRUE)
 FLAGS   += -D_QNX_IOSOCK
 else
 LDFLAGS += -lsocket
+endif
+
+ifeq ($(ENABLE_SO_REUSEPORT), TRUE)
+FLAGS   += -D_ENABLE_SO_REUSEPORT
 endif
 
 CMAKE_ARGS = -DCMAKE_TOOLCHAIN_FILE=$(PROJECT_ROOT)/qnx.nto.toolchain.cmake \
