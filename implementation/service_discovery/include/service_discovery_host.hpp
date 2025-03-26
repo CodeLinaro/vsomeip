@@ -23,6 +23,8 @@
 
 #include <vsomeip/message.hpp>
 
+#include <boost/asio/steady_timer.hpp>
+
 namespace vsomeip_v3 {
 
 class configuration;
@@ -37,6 +39,22 @@ public:
     }
 
     virtual boost::asio::io_context &get_io() = 0;
+
+    virtual boost::asio::steady_timer &get_ttl_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_subscription_expiration_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_offer_debounce_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_find_debounce_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_main_phase_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_last_msg_received_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_repetition_phase_timer() = 0;
+
+    virtual boost::asio::steady_timer &get_find_repetition_phase_timer() = 0;
 
     virtual std::shared_ptr<endpoint> create_service_discovery_endpoint(
             const std::string &_address, uint16_t _port, bool _reliable) = 0;

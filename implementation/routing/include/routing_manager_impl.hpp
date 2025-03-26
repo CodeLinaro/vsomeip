@@ -54,6 +54,14 @@ public:
     ~routing_manager_impl();
 
     boost::asio::io_context &get_io();
+    boost::asio::steady_timer &get_ttl_timer();
+    boost::asio::steady_timer &get_subscription_expiration_timer();
+    boost::asio::steady_timer &get_offer_debounce_timer();
+    boost::asio::steady_timer &get_find_debounce_timer();
+    boost::asio::steady_timer &get_main_phase_timer();
+    boost::asio::steady_timer &get_last_msg_received_timer();
+    boost::asio::steady_timer &get_repetition_phase_timer();
+    boost::asio::steady_timer &get_find_repetition_phase_timer();
     client_t get_client() const;
     const vsomeip_sec_client_t *get_sec_client() const;
     std::string get_client_host() const;
@@ -556,6 +564,16 @@ private:
     std::mutex update_remote_subscription_mutex_;
 
     message_acceptance_handler_t message_acceptance_handler_;
+
+    /* sd timer */
+    boost::asio::steady_timer ttl_timer_;
+    boost::asio::steady_timer subscription_expiration_timer_;
+    boost::asio::steady_timer offer_debounce_timer_;
+    boost::asio::steady_timer find_debounce_timer_;
+    boost::asio::steady_timer main_phase_timer_;
+    boost::asio::steady_timer last_msg_received_timer_;
+    boost::asio::steady_timer repetition_phase_timer_;
+    boost::asio::steady_timer find_repetition_phase_timer_;
 };
 
 }  // namespace vsomeip_v3

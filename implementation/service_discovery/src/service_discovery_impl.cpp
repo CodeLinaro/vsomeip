@@ -55,23 +55,25 @@ service_discovery_impl::service_discovery_impl(
                       configuration_->get_buffer_shrink_threshold())),
       deserializer_(std::make_shared<deserializer>(
                       configuration_->get_buffer_shrink_threshold())),
-      ttl_timer_(_host->get_io()),
+      ttl_timer_(_host->get_ttl_timer()),
       ttl_timer_runtime_(VSOMEIP_SD_DEFAULT_CYCLIC_OFFER_DELAY / 2),
       ttl_(VSOMEIP_SD_DEFAULT_TTL),
-      subscription_expiration_timer_(_host->get_io()),
+      subscription_expiration_timer_(_host->get_subscription_expiration_timer()),
       max_message_size_(VSOMEIP_MAX_UDP_SD_PAYLOAD),
       initial_delay_(0),
       offer_debounce_time_(VSOMEIP_SD_DEFAULT_OFFER_DEBOUNCE_TIME),
       repetitions_base_delay_(VSOMEIP_SD_DEFAULT_REPETITIONS_BASE_DELAY),
       repetitions_max_(VSOMEIP_SD_DEFAULT_REPETITIONS_MAX),
       cyclic_offer_delay_(VSOMEIP_SD_DEFAULT_CYCLIC_OFFER_DELAY),
-      offer_debounce_timer_(_host->get_io()),
+      offer_debounce_timer_(_host->get_offer_debounce_timer()),
       find_debounce_time_(VSOMEIP_SD_DEFAULT_FIND_DEBOUNCE_TIME),
-      find_debounce_timer_(_host->get_io()),
-      main_phase_timer_(_host->get_io()),
+      find_debounce_timer_(_host->get_find_debounce_timer()),
+      repetition_phase_timer_(_host->get_repetition_phase_timer()),
+      find_repetition_phase_timer_(_host->get_find_repetition_phase_timer()),
+      main_phase_timer_(_host->get_main_phase_timer()),
       is_suspended_(false),
       is_diagnosis_(false),
-      last_msg_received_timer_(_host->get_io()),
+      last_msg_received_timer_(_host->get_last_msg_received_timer()),
       last_msg_received_timer_timeout_(VSOMEIP_SD_DEFAULT_CYCLIC_OFFER_DELAY +
                                            (VSOMEIP_SD_DEFAULT_CYCLIC_OFFER_DELAY / 10)) {
 
@@ -795,6 +797,8 @@ service_discovery_impl::insert_offer_entries(
                 if ((_ignore_phase || its_instance.second->is_in_mainphase())
                         && (its_instance.second->get_endpoint(false)
                                 || its_instance.second->get_endpoint(true))) {
+                    std::shared_ptr<message_impl> its_message(std::make_shared<message_impl>());
+                    _messages.push_back(its_message);
                     insert_offer_service(_messages, its_instance.second);
                 }
             }
@@ -1090,12 +1094,8 @@ service_discovery_impl::send(bool _is_announcing) {
     std::shared_ptr < runtime > its_runtime = runtime_.lock();
     if (its_runtime) {
         std::vector<std::shared_ptr<message_impl> > its_messages;
-        std::shared_ptr<message_impl> its_message;
 
         if (_is_announcing) {
-            its_message = std::make_shared<message_impl>();
-            its_messages.push_back(its_message);
-
             std::lock_guard<std::mutex> its_lock(offer_mutex_);
             services_t its_offers = host_->get_offered_services();
             insert_offer_entries(its_messages, its_offers, false);
@@ -2879,11 +2879,10 @@ service_discovery_impl::on_find_debounce_timer_expired(
     std::chrono::milliseconds its_delay(repetitions_base_delay_);
     std::uint8_t its_repetitions(1);
 
-    std::shared_ptr<boost::asio::steady_timer> its_timer = std::make_shared<
-            boost::asio::steady_timer>(host_->get_io());
+    boost::asio::steady_timer *its_timer = &find_repetition_phase_timer_;
     {
         std::lock_guard<std::mutex> its_lock(find_repetition_phase_timers_mutex_);
-        find_repetition_phase_timers_[its_timer] = repetition_phase_finds;
+        find_repetition_phase_timers_[its_timer].insert(repetition_phase_finds.begin(), repetition_phase_finds.end());
     }
 
     boost::system::error_code ec;
@@ -2944,8 +2943,6 @@ service_discovery_impl::on_offer_debounce_timer_expired(
 
     // Sent out offers for the first time as initial wait phase ended
     std::vector<std::shared_ptr<message_impl>> its_messages;
-    std::shared_ptr<message_impl> its_message(std::make_shared<message_impl>());
-    its_messages.push_back(its_message);
     insert_offer_entries(its_messages, repetition_phase_offers, true);
 
     // Serialize and send
@@ -2965,12 +2962,10 @@ service_discovery_impl::on_offer_debounce_timer_expired(
         its_repetitions = 0;
     }
 
-    std::shared_ptr<boost::asio::steady_timer> its_timer = std::make_shared<
-            boost::asio::steady_timer>(host_->get_io());
-
+    boost::asio::steady_timer *its_timer = &repetition_phase_timer_;
     {
         std::lock_guard<std::mutex> its_lock(repetition_phase_timers_mutex_);
-        repetition_phase_timers_[its_timer] = repetition_phase_offers;
+        repetition_phase_timers_[its_timer].insert(repetition_phase_offers.begin(), repetition_phase_offers.end());
     }
 
     boost::system::error_code ec;
@@ -2990,7 +2985,7 @@ service_discovery_impl::on_offer_debounce_timer_expired(
 void
 service_discovery_impl::on_repetition_phase_timer_expired(
         const boost::system::error_code &_error,
-        const std::shared_ptr<boost::asio::steady_timer>& _timer,
+        boost::asio::steady_timer *_timer,
         std::uint8_t _repetition, std::uint32_t _last_delay) {
     if (_error) {
         return;
@@ -3028,9 +3023,6 @@ service_discovery_impl::on_repetition_phase_timer_expired(
                 }
             }
             std::vector<std::shared_ptr<message_impl>> its_messages;
-            std::shared_ptr<message_impl> its_message(
-                    std::make_shared<message_impl>());
-            its_messages.push_back(its_message);
             insert_offer_entries(its_messages, its_timer_pair->second, true);
 
             // Serialize and send
@@ -3040,16 +3032,16 @@ service_discovery_impl::on_repetition_phase_timer_expired(
                 return;
             }
             boost::system::error_code ec;
-            its_timer_pair->first->expires_from_now(new_delay, ec);
+            _timer->expires_from_now(new_delay, ec);
             if (ec) {
                 VSOMEIP_ERROR <<
                 "service_discovery_impl::on_repetition_phase_timer_expired "
                 "setting expiry time of timer failed: " << ec.message();
             }
-            its_timer_pair->first->async_wait(
+            _timer->async_wait(
                     std::bind(
                             &service_discovery_impl::on_repetition_phase_timer_expired,
-                            this, std::placeholders::_1, its_timer_pair->first,
+                            this, std::placeholders::_1, _timer,
                             repetition, new_delay.count()));
         }
     }
@@ -3058,7 +3050,7 @@ service_discovery_impl::on_repetition_phase_timer_expired(
 void
 service_discovery_impl::on_find_repetition_phase_timer_expired(
         const boost::system::error_code &_error,
-        const std::shared_ptr<boost::asio::steady_timer>& _timer,
+        boost::asio::steady_timer *_timer,
         std::uint8_t _repetition, std::uint32_t _last_delay) {
     if (_error) {
         return;
@@ -3085,22 +3077,22 @@ service_discovery_impl::on_find_repetition_phase_timer_expired(
             return;
         }
         boost::system::error_code ec;
-        its_timer_pair->first->expires_from_now(new_delay, ec);
+        _timer->expires_from_now(new_delay, ec);
         if (ec) {
             VSOMEIP_ERROR << __func__
                     << "setting expiry time of timer failed: " << ec.message();
         }
-        its_timer_pair->first->async_wait(
+        _timer->async_wait(
                 std::bind(
                         &service_discovery_impl::on_find_repetition_phase_timer_expired,
-                        this, std::placeholders::_1, its_timer_pair->first,
+                        this, std::placeholders::_1, _timer,
                         repetition, new_delay.count()));
     }
 }
 
 void
 service_discovery_impl::move_offers_into_main_phase(
-        const std::shared_ptr<boost::asio::steady_timer> &_timer) {
+        boost::asio::steady_timer *_timer) {
     // HINT: make sure to lock the repetition_phase_timers_mutex_ before calling
     // this function set flag on all serviceinfos bound to this timer that they
     // will be included in the cyclic offers from now on
@@ -3204,13 +3196,12 @@ bool
 service_discovery_impl::send_collected_stop_offers(const std::vector<std::shared_ptr<serviceinfo>> &_infos) {
 
     std::vector<std::shared_ptr<message_impl> > its_messages;
-    std::shared_ptr<message_impl> its_current_message(
-            std::make_shared<message_impl>());
-    its_messages.push_back(its_current_message);
 
     // pack multiple stop offers together
     for (auto its_info : _infos) {
         if (its_info->get_endpoint(false) || its_info->get_endpoint(true)) {
+            std::shared_ptr<message_impl> its_current_message(std::make_shared<message_impl>());
+            its_messages.push_back(its_current_message);
             insert_offer_service(its_messages, its_info);
         }
     }

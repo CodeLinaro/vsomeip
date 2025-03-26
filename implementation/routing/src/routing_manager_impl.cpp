@@ -85,7 +85,15 @@ routing_manager_impl::routing_manager_impl(routing_manager_host *_host) :
         pending_remote_offer_id_(0),
         last_resume_(std::chrono::steady_clock::now().min()),
         statistics_log_timer_(_host->get_io()),
-        ignored_statistics_counter_(0)
+        ignored_statistics_counter_(0),
+        ttl_timer_(_host->get_io()),
+        subscription_expiration_timer_(_host->get_io()),
+        offer_debounce_timer_(_host->get_io()),
+        find_debounce_timer_(_host->get_io()),
+        main_phase_timer_(_host->get_io()),
+        last_msg_received_timer_(_host->get_io()),
+        repetition_phase_timer_(_host->get_io()),
+        find_repetition_phase_timer_(_host->get_io())
 {
 }
 
@@ -96,6 +104,38 @@ routing_manager_impl::~routing_manager_impl() {
 
 boost::asio::io_context &routing_manager_impl::get_io() {
     return routing_manager_base::get_io();
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_ttl_timer() {
+    return ttl_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_subscription_expiration_timer() {
+    return subscription_expiration_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_offer_debounce_timer() {
+    return offer_debounce_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_find_debounce_timer() {
+    return find_debounce_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_main_phase_timer() {
+    return main_phase_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_last_msg_received_timer() {
+    return last_msg_received_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_repetition_phase_timer() {
+    return repetition_phase_timer_;
+}
+
+boost::asio::steady_timer &routing_manager_impl::get_find_repetition_phase_timer() {
+    return find_repetition_phase_timer_;
 }
 
 client_t routing_manager_impl::get_client() const {
