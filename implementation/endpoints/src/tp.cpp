@@ -32,7 +32,7 @@ tp::tp_split_message(const std::uint8_t * const _data, std::uint32_t _size,
 
     tp_split_messages_t split_messages;
 
-    if (_size < VSOMEIP_MAX_UDP_MESSAGE_SIZE) {
+    if (_size < VSOMEIP_MAX_UNRELIABLE_SOMEIP_MESSAGE_SIZE ) {
         VSOMEIP_ERROR << __func__ << " called with size: " << std::dec << _size;
         return split_messages;
     }

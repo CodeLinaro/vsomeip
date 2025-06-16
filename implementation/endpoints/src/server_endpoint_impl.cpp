@@ -459,8 +459,9 @@ typename endpoint_impl<Protocol>::cms_ret_e server_endpoint_impl<Protocol>::chec
         const std::uint8_t * const _data, std::uint32_t _size,
         const endpoint_type& _target) {
     typename endpoint_impl<Protocol>::cms_ret_e ret(endpoint_impl<Protocol>::cms_ret_e::MSG_OK);
-    if (endpoint_impl<Protocol>::max_message_size_ != MESSAGE_SIZE_UNLIMITED
-            && _size > endpoint_impl<Protocol>::max_message_size_) {
+    if ((endpoint_impl<Protocol>::max_message_size_ != MESSAGE_SIZE_UNLIMITED)
+          && (((!this->is_reliable()) && (_size > VSOMEIP_MAX_UNRELIABLE_SOMEIP_MESSAGE_SIZE )) || 
+              ((this->is_reliable()) && (_size > endpoint_impl<Protocol>::max_message_size_)))) {
         if (endpoint_impl<Protocol>::is_supporting_someip_tp_ && _data != nullptr) {
             const service_t its_service = VSOMEIP_BYTES_TO_WORD(
                     _data[VSOMEIP_SERVICE_POS_MIN],
