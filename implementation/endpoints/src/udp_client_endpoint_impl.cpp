@@ -66,6 +66,13 @@ void udp_client_endpoint_impl::connect() {
                     << "SO_REUSEADDR: " << its_error.message() << " remote:"
                     << get_address_port_remote();
         }
+
+#ifdef _ENABLE_SO_REUSEPORT
+        int its_pktinfo_option(1);
+        ::setsockopt(socket_->native_handle(), SOL_SOCKET, SO_REUSEPORT,
+                &its_pktinfo_option, sizeof(its_pktinfo_option));
+#endif
+
         socket_->set_option(boost::asio::socket_base::receive_buffer_size(
                 udp_receive_buffer_size_), its_error);
         if (its_error) {

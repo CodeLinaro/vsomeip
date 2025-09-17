@@ -67,6 +67,12 @@ udp_server_endpoint_impl::udp_server_endpoint_impl(
         VSOMEIP_ERROR << __func__
             << ": set reuse address option failed (" << ec.message() << ")";
 
+#ifdef _ENABLE_SO_REUSEPORT
+    int its_pktinfo_option(1);
+    ::setsockopt(unicast_socket_.native_handle(), SOL_SOCKET, SO_REUSEPORT,
+            &its_pktinfo_option, sizeof(its_pktinfo_option));
+#endif
+
 #if defined(__linux__) || defined(ANDROID) || defined(__QNX__)
     // If specified, bind to device
     std::string its_device(configuration_->get_device());
