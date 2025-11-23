@@ -1563,6 +1563,7 @@ void routing_manager_impl::on_message(const byte_t *_data, length_t _size,
             } else {
                 its_instance = ep_mgr_impl_->find_instance(its_service, _receiver);
             }
+#ifdef INVALID_MESSAGE_LOGGING
             if (its_instance == 0xFFFF) {
                 its_method = VSOMEIP_BYTES_TO_WORD(
                         _data[VSOMEIP_METHOD_POS_MIN],
@@ -1583,6 +1584,7 @@ void routing_manager_impl::on_message(const byte_t *_data, length_t _size,
                         << std::setw(4) << its_session << "] from: "
                         << _remote_address.to_string(ec) << ":" << std::dec << _remote_port;
             }
+#endif
             //Ignore messages with invalid message type
             if(_size >= VSOMEIP_MESSAGE_TYPE_POS) {
                 if(!utility::is_valid_message_type(its_message_type)) {
@@ -2194,11 +2196,13 @@ bool routing_manager_impl::deliver_notification(
 
     } else {
         if (!is_suppress_event(_service, _instance, its_event_id)) {
+#ifdef INVALID_MESSAGE_LOGGING
             VSOMEIP_WARNING << __func__ << ": Event ["
                     << std::hex << std::setw(4) << std::setfill('0') << _service << "."
                     << std::hex << std::setw(4) << std::setfill('0') << _instance << "."
                     << std::hex << std::setw(4) << std::setfill('0') << its_event_id << "]"
                     << " is not registered. The message is dropped.";
+#endif
         }
     }
     return true;
