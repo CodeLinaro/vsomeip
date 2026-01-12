@@ -100,6 +100,14 @@ udp_server_endpoint_impl::udp_server_endpoint_impl(
         if (ec)
             VSOMEIP_ERROR << __func__
                 << ": set IPv4 outbound interface option failed (" << ec.message() << ")";
+
+        /* Set TTL for multicast packets */
+        uint32_t ttl_value = configuration_->get_sd_ttl();
+        boost::asio::ip::multicast::hops multicast_ttl_option(ttl_value);
+        unicast_socket_.set_option(multicast_ttl_option, ec);
+        if (ec)
+            VSOMEIP_ERROR << __func__
+                << ": set IPv4 MULTICAST TTL option failed (" << ec.message() << ")";
     } else {
         boost::asio::ip::multicast::outbound_interface option(
                 static_cast<unsigned int>(local_.address().to_v6().scope_id()));
