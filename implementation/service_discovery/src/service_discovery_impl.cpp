@@ -797,8 +797,6 @@ service_discovery_impl::insert_offer_entries(
                 if ((_ignore_phase || its_instance.second->is_in_mainphase())
                         && (its_instance.second->get_endpoint(false)
                                 || its_instance.second->get_endpoint(true))) {
-                    std::shared_ptr<message_impl> its_message(std::make_shared<message_impl>());
-                    _messages.push_back(its_message);
                     insert_offer_service(_messages, its_instance.second);
                 }
             }
@@ -1093,9 +1091,13 @@ bool
 service_discovery_impl::send(bool _is_announcing) {
     std::shared_ptr < runtime > its_runtime = runtime_.lock();
     if (its_runtime) {
-        std::vector<std::shared_ptr<message_impl> > its_messages;
+       std::vector<std::shared_ptr<message_impl> > its_messages;
+        std::shared_ptr<message_impl> its_message;
 
         if (_is_announcing) {
+            its_message = std::make_shared<message_impl>();
+            its_messages.push_back(its_message);
+
             std::lock_guard<std::mutex> its_lock(offer_mutex_);
             services_t its_offers = host_->get_offered_services();
             insert_offer_entries(its_messages, its_offers, false);
@@ -2943,6 +2945,8 @@ service_discovery_impl::on_offer_debounce_timer_expired(
 
     // Sent out offers for the first time as initial wait phase ended
     std::vector<std::shared_ptr<message_impl>> its_messages;
+    std::shared_ptr<message_impl> its_message(std::make_shared<message_impl>());
+    its_messages.push_back(its_message);
     insert_offer_entries(its_messages, repetition_phase_offers, true);
 
     // Serialize and send
@@ -3023,6 +3027,9 @@ service_discovery_impl::on_repetition_phase_timer_expired(
                 }
             }
             std::vector<std::shared_ptr<message_impl>> its_messages;
+            std::shared_ptr<message_impl> its_message(
+                    std::make_shared<message_impl>());
+            its_messages.push_back(its_message);
             insert_offer_entries(its_messages, its_timer_pair->second, true);
 
             // Serialize and send
@@ -3196,12 +3203,13 @@ bool
 service_discovery_impl::send_collected_stop_offers(const std::vector<std::shared_ptr<serviceinfo>> &_infos) {
 
     std::vector<std::shared_ptr<message_impl> > its_messages;
+    std::shared_ptr<message_impl> its_current_message(
+            std::make_shared<message_impl>());
+    its_messages.push_back(its_current_message);
 
     // pack multiple stop offers together
     for (auto its_info : _infos) {
         if (its_info->get_endpoint(false) || its_info->get_endpoint(true)) {
-            std::shared_ptr<message_impl> its_current_message(std::make_shared<message_impl>());
-            its_messages.push_back(its_current_message);
             insert_offer_service(its_messages, its_info);
         }
     }
